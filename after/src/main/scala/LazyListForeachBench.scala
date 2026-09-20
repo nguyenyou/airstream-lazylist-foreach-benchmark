@@ -17,8 +17,9 @@ object LazyListForeachBench {
   }
 
   def main(args: Array[String]): Unit = {
-    val size = args.headOption.map(_.toInt).getOrElse(256)
-    val rounds = args.drop(1).headOption.map(_.toInt).getOrElse(1000)
+    val cliArgs = js.Dynamic.global.process.argv.asInstanceOf[js.Array[String]].toSeq
+    val size = cliArgs.drop(2).headOption.map(_.toInt).getOrElse(256)
+    val rounds = cliArgs.drop(3).headOption.map(_.toInt).getOrElse(1000)
     println(js.Dynamic.global.JSON.stringify(js.Dynamic.literal(
       size = size,
       rounds = rounds,
