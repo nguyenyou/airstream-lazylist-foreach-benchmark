@@ -1,0 +1,52 @@
+name: Benchmark
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: sbt/setup-sbt@v1
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Build Scala.js bundles
+        run: sbt before/fullOptJS after/fullOptJS
+      - name: Install benchmark dependencies
+        run: bun install --frozen-lockfile=false
+      - name: Run benchmark scenarios
+        run: |
+          before_js=before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
+          after_js=after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
+          for size in 16 256 4096; do
+            bun benchmark.ts "$before_js" "$after_js" "$size" | tee "benchmark-$size.txt"
+          done
+      - name: Measure bundle sizes
+        run: |
+          before_js=before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
+          after_js=after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
+          before_size=$(wc -c < "$before_js")
+          after_size=$(wc -c < "$after_js")
+          delta=$((after_size - before_size))
+          {
+            echo "## Bundle size"
+            echo "- Before: ${before_size} bytes"
+            echo "- After: ${after_size} bytes"
+            echo "- Delta: ${delta} bytes"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload bundles and results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
+            after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
+            result-*.json
+            benchmark-*.txt
