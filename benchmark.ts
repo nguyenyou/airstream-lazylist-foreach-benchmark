@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises"
 
 const [, , beforePath, afterPath, sizeArg = "256"] = Bun.argv
 const size = Number(sizeArg)
-const rounds = 100_000
+const rounds = size >= 4096 ? 10_000 : 100_000
 const warmupRuns = 3
 const measuredRuns = 7
 
