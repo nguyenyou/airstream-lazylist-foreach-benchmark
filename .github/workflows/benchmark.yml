@@ -19,8 +19,6 @@ jobs:
           bun-version: latest
       - name: Build Scala.js bundles
         run: sbt before/fullOptJS after/fullOptJS
-      - name: Install benchmark dependencies
-        run: bun install --frozen-lockfile=false
       - name: Run benchmark scenarios
         run: |
           before_js=before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
