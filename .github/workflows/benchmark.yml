@@ -26,15 +26,18 @@ jobs:
         run: |
           before_js=before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
           after_js=after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
-          for size in 16 256 4096; do
-            bun benchmark.ts "$before_js" "$after_js" "$size" | tee "benchmark-$size.txt"
+          for runtime in bun node; do
+            for size in 16 256 4096; do
+              "$runtime" benchmark.mjs "$runtime" "$before_js" "$after_js" "$size" | tee "benchmark-$runtime-$size.txt"
+            done
           done
       - name: Measure bundle sizes
         run: >-
-          bun report.ts
+          node report.mjs
           before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
           after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
-          result-16.json result-256.json result-4096.json
+          bun-result-16.json bun-result-256.json bun-result-4096.json
+          node-result-16.json node-result-256.json node-result-4096.json
           >> "$GITHUB_STEP_SUMMARY"
       - name: Upload bundles and results
         uses: actions/upload-artifact@v4
@@ -43,5 +46,5 @@ jobs:
           path: |
             before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
             after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
-            result-*.json
+            *-result-*.json
             benchmark-*.txt
