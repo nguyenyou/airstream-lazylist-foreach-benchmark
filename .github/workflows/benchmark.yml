@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
@@ -27,18 +30,12 @@ jobs:
             bun benchmark.ts "$before_js" "$after_js" "$size" | tee "benchmark-$size.txt"
           done
       - name: Measure bundle sizes
-        run: |
-          before_js=before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
-          after_js=after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
-          before_size=$(wc -c < "$before_js")
-          after_size=$(wc -c < "$after_js")
-          delta=$((after_size - before_size))
-          {
-            echo "## Bundle size"
-            echo "- Before: ${before_size} bytes"
-            echo "- After: ${after_size} bytes"
-            echo "- Delta: ${delta} bytes"
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: >-
+          bun report.ts
+          before/target/scala-3.9.0/airstream-lazylist-foreach-before-opt/main.js
+          after/target/scala-3.9.0/airstream-lazylist-foreach-after-opt/main.js
+          result-16.json result-256.json result-4096.json
+          >> "$GITHUB_STEP_SUMMARY"
       - name: Upload bundles and results
         uses: actions/upload-artifact@v4
         with:
